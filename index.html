@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Launcher</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d0d0f;
+            --grid-bg: #1a1a1d;
+            --grid-border: #333338;
+            --accent-color: #F5D94D;
+            --text-color: #E4E4E7;
+            --text-secondary: #888890;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .header {
+            width: 100%;
+            max-width: 960px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .header-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+
+        .settings-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 8px;
+            transition: color 0.2s ease, transform 0.2s ease;
+        }
+
+        .settings-button:hover {
+            color: var(--accent-color);
+            transform: rotate(45deg);
+        }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            width: 100%;
+            max-width: 960px;
+        }
+
+        .game-slot {
+            aspect-ratio: 4 / 3;
+            background-color: var(--grid-bg);
+            border: 2px solid var(--grid-border);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: var(--text-color);
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .game-slot.active:hover {
+            transform: scale(1.05);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 20px rgba(245, 217, 77, 0.3);
+        }
+        
+        .game-slot.empty {
+             color: var(--text-secondary);
+        }
+
+        .game-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .game-icon {
+            font-size: 48px;
+        }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: var(--grid-bg);
+            border: 2px solid var(--grid-border);
+            border-radius: 8px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 24px;
+            color: var(--accent-color);
+        }
+        
+        .close-button {
+             font-size: 30px;
+             cursor: pointer;
+             color: var(--text-secondary);
+             background: none;
+             border: none;
+        }
+        
+        .close-button:hover {
+            color: var(--text-color);
+        }
+        
+        #gamepad-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        #gamepad-list li {
+            padding: 10px;
+            border-bottom: 1px solid var(--grid-border);
+        }
+        #gamepad-list li:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-title">Game Arcade</div>
+        <button class="settings-button" id="settingsBtn" title="Settings">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+    </div>
+
+    <div class="game-grid">
+        <!-- Game 1: Blasteroids -->
+        <a href="blasteroids.html" class="game-slot active">
+            <div class="game-icon">🚀</div>
+            <div class="game-title">Blasteroids</div>
+        </a>
+
+        <!-- Placeholder Slots -->
+        <div class="game-slot empty"><span>Coming Soon</span></div>
+        <div class="game-slot empty"><span>Coming Soon</span></div>
+        <div class="game-slot empty"><span>Coming Soon</span></div>
+        <div class="game-slot empty"><span>Coming Soon</span></div>
+        <div class="game-slot empty"><span>Coming Soon</span></div>
+        <div class="game-slot empty"><span>Coming Soon</span></div>
+        <div class="game-slot empty"><span>Coming Soon</span></div>
+        <div class="game-slot empty"><span>Coming Soon</span></div>
+    </div>
+    
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Controller Settings</h2>
+                <button class="close-button" id="closeModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Detected gamepads will be listed here. Connect a controller to begin.</p>
+                <ul id="gamepad-list">
+                    <!-- Gamepads will be dynamically added here -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const settingsBtn = document.getElementById('settingsBtn');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const settingsModal = document.getElementById('settingsModal');
+        const gamepadList = document.getElementById('gamepad-list');
+
+        function updateGamepadList() {
+            gamepadList.innerHTML = '';
+            const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+            let connectedCount = 0;
+            for(const gp of gamepads) {
+                if (gp) {
+                    const item = document.createElement('li');
+                    item.textContent = `[${gp.index}] ${gp.id}`;
+                    gamepadList.appendChild(item);
+                    connectedCount++;
+                }
+            }
+            if (connectedCount === 0) {
+                gamepadList.innerHTML = '<li>No controllers detected.</li>';
+            }
+        }
+
+        settingsBtn.addEventListener('click', () => {
+            updateGamepadList();
+            settingsModal.classList.add('show');
+        });
+
+        closeModalBtn.addEventListener('click', () => {
+            settingsModal.classList.remove('show');
+        });
+        
+        settingsModal.addEventListener('click', (event) => {
+            if (event.target === settingsModal) {
+                 settingsModal.classList.remove('show');
+            }
+        });
+
+        window.addEventListener('gamepadconnected', updateGamepadList);
+        window.addEventListener('gamepaddisconnected', updateGamepadList);
+    </script>
+
+</body>
+</html>
