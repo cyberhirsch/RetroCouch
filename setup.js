@@ -1,174 +1,166 @@
+// ================================================================================
+// FILE: setup.js
+// This powers the setup.html page UI.
+// ================================================================================
+
 document.addEventListener('DOMContentLoaded', () => {
+    // UI Elements
+    const profileSelector = document.getElementById('profile-selector');
+    const newProfileBtn = document.getElementById('new-profile-btn');
+    const deleteProfileBtn = document.getElementById('delete-profile-btn');
+    const mappingContainer = document.getElementById('mapping-container');
+    const assignmentsContainer = document.getElementById('assignments-container');
     const visualizerPanel = document.getElementById('visualizer-panel');
-    const noGamepadMessage = document.getElementById('no-gamepad-message');
-    const saveBtn = document.getElementById('saveBtn');
-    const saveStatus = document.getElementById('save-status');
 
-    let gamepads = {};
-    let animationFrameId;
-    let config = {};
-    let listeningFor = null; // { player, action, element }
+    let config = controllerManager.loadConfig();
+    let listeningFor = null; // { profile, key, element }
+    
+    const VIRTUAL_GAMEPAD_LAYOUT = [
+        'actionSouth', 'actionEast', 'actionWest', 'actionNorth',
+        'leftBumper', 'rightBumper', 'leftTrigger', 'rightTrigger',
+        'select', 'start', 'leftStickPress', 'rightStickPress',
+        'dpadUp', 'dpadDown', 'dpadLeft', 'dpadRight',
+        'leftStickX', 'leftStickY', 'rightStickX', 'rightStickY'
+    ];
 
-    const CONFIG_KEY = 'gameControllerConfig';
-
-    // --- Core Functions ---
-
-    function loadConfig() {
-        const savedConfig = localStorage.getItem(CONFIG_KEY);
-        try {
-            config = savedConfig ? JSON.parse(savedConfig) : generateDefaultConfig();
-        } catch (e) {
-            console.error("Failed to parse controller config, using defaults.", e);
-            config = generateDefaultConfig();
+    function populateProfileSelector() {
+        profileSelector.innerHTML = '';
+        for (const name in config.profiles) {
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name;
+            profileSelector.appendChild(option);
         }
-        updateMappingUI();
     }
 
-    function saveConfig() {
-        localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
-        saveStatus.style.opacity = '1';
-        setTimeout(() => { saveStatus.style.opacity = '0'; }, 2000);
-    }
+    function populateMappings() {
+        mappingContainer.innerHTML = '';
+        const selectedProfile = profileSelector.value;
+        const profile = config.profiles[selectedProfile];
+        if (!profile) return;
 
-    function generateDefaultConfig() {
-        return {
-            player1: { up: 'button_12', left: 'button_14', right: 'button_15', shoot: 'button_0' },
-            player2: { up: 'button_12', left: 'button_14', right: 'button_15', shoot: 'button_0' },
-            global: { pause: 'button_9', confirm: 'button_0' }
-        };
-    }
-
-    function updateMappingUI() {
-        document.querySelectorAll('.map-button').forEach(button => {
-            const player = button.dataset.player === 'global' ? 'global' : `player${parseInt(button.dataset.player) + 1}`;
-            const action = button.dataset.action;
-            if (config[player] && config[player][action]) {
-                button.textContent = config[player][action].replace('_', ' ').toUpperCase();
-            } else {
-                button.textContent = "Not Set";
+        VIRTUAL_GAMEPAD_LAYOUT.forEach(key => {
+            const div = document.createElement('div');
+            div.className = 'control-mapping';
+            div.innerHTML = `<span>${key}</span><button class="map-button" data-key="${key}">Not Set</button>`;
+            mappingContainer.appendChild(div);
+            
+            const button = div.querySelector('button');
+            if (profile[key]) {
+                button.textContent = profile[key].replace(/_/g, ' ').toUpperCase();
             }
+            button.onclick = () => listenForInput(selectedProfile, key, button);
         });
     }
 
-    function listenForInput(player, action, element) {
-        // Reset any other listening buttons
-        document.querySelectorAll('.map-button.listening').forEach(el => el.classList.remove('listening'));
+    function populateAssignments() {
+        assignmentsContainer.innerHTML = '';
+        for (let i = 0; i < 2; i++) { // For Player 1 and Player 2
+            const div = document.createElement('div');
+            div.className = 'control-mapping';
+            const select = document.createElement('select');
+            select.id = `assign-p${i}`;
+            for (const name in config.profiles) {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                select.appendChild(option);
+            }
+            select.value = config.assignments[i] || 'none';
+            select.onchange = () => {
+                config.assignments[i] = select.value;
+                controllerManager.saveConfig(config);
+            };
+            div.innerHTML = `<span>Player ${i + 1} uses:</span>`;
+            div.appendChild(select);
+            assignmentsContainer.appendChild(div);
+        }
+    }
 
-        listeningFor = { player, action, element };
+    function listenForInput(profile, key, element) {
+        if (listeningFor) {
+            listeningFor.element.classList.remove('listening');
+            listeningFor.element.textContent = config.profiles[listeningFor.profile][listeningFor.key]?.replace(/_/g, ' ').toUpperCase() || 'Not Set';
+        }
+        listeningFor = { profile, key, element };
         element.classList.add('listening');
-        element.textContent = 'Press a button...';
-    }
-
-    // --- Gamepad Connection and Visualization ---
-
-    function handleGamepadConnected(e) {
-        const gamepad = e.gamepad;
-        gamepads[gamepad.index] = gamepad;
-        addGamepadVisualizer(gamepad);
-        if (noGamepadMessage) noGamepadMessage.style.display = 'none';
-        if (!animationFrameId) animationFrameId = requestAnimationFrame(update);
-    }
-
-    function handleGamepadDisconnected(e) {
-        const gamepad = e.gamepad;
-        removeGamepadVisualizer(gamepad);
-        delete gamepads[gamepad.index];
-        if (Object.keys(gamepads).length === 0) {
-            if (noGamepadMessage) noGamepadMessage.style.display = 'block';
-            cancelAnimationFrame(animationFrameId);
-            animationFrameId = null;
-        }
+        element.textContent = 'Press button/axis...';
     }
     
-    // (Visualizer creation functions are the same, just moved inside the main IIFE)
-    function addGamepadVisualizer(gamepad) {
-        const visualizer = document.createElement('div');
-        visualizer.className = 'gamepad connected';
-        visualizer.id = `gamepad-${gamepad.index}`;
-        let buttonsHTML = '';
-        gamepad.buttons.forEach((_, index) => { buttonsHTML += `<div class="button" id="btn-${gamepad.index}-${index}">B${index}</div>`; });
-        let axesHTML = '';
-        gamepad.axes.forEach((_, index) => {
-            axesHTML += `<div class="axis">A${index}: <span id="axis-val-${gamepad.index}-${index}">0.00</span><div class="axis-bar"><div class="axis-value" id="axis-bar-${gamepad.index}-${index}"></div></div></div>`;
-        });
-        visualizer.innerHTML = `<div class="gamepad-name">[${gamepad.index}] ${gamepad.id}</div><div class="gamepad-details"><div class="buttons-container"><div class="container-title">Buttons</div><div class="buttons-grid">${buttonsHTML}</div></div><div class="axes-container"><div class="container-title">Axes</div><div class="axes-grid">${axesHTML}</div></div></div>`;
-        visualizerPanel.appendChild(visualizer);
-    }
-
-    function removeGamepadVisualizer(gamepad) {
-        const visualizer = document.getElementById(`gamepad-${gamepad.index}`);
-        if (visualizer) visualizer.remove();
-    }
-
-
     function update() {
-        const connectedGamepads = navigator.getGamepads ? navigator.getGamepads() : [];
-
-        for (const gamepad of connectedGamepads) {
-            if (!gamepad) continue;
-
-            // Check for input to map if we are listening
-            if (listeningFor && gamepad.index == listeningFor.player) {
-                // Check buttons
-                const pressedButton = gamepad.buttons.findIndex(b => b.pressed);
-                if (pressedButton !== -1) {
-                    const inputId = `button_${pressedButton}`;
-                    const playerKey = `player${parseInt(listeningFor.player) + 1}`;
-                    config[playerKey][listeningFor.action] = inputId;
-                    listeningFor.element.classList.remove('listening');
-                    listeningFor = null;
-                    updateMappingUI();
-                    break; // Stop checking once input is captured
-                }
-            }
-             // Handle Global mapping separately (listens on all controllers)
-            if (listeningFor && listeningFor.player === 'global') {
-                const pressedButton = gamepad.buttons.findIndex(b => b.pressed);
-                if (pressedButton !== -1) {
-                    const inputId = `button_${pressedButton}`;
-                    config.global[listeningFor.action] = inputId;
-                    listeningFor.element.classList.remove('listening');
-                    listeningFor = null;
-                    updateMappingUI();
-                    break;
-                }
-            }
-
-
-            // Update visualizer
-            gamepad.buttons.forEach((button, index) => {
-                document.getElementById(`btn-${gamepad.index}-${index}`)?.classList.toggle('pressed', button.pressed);
-            });
-            gamepad.axes.forEach((axisValue, index) => {
-                const valEl = document.getElementById(`axis-val-${gamepad.index}-${index}`);
-                const barEl = document.getElementById(`axis-bar-${gamepad.index}-${index}`);
-                if (valEl && barEl) {
-                    valEl.textContent = axisValue.toFixed(2);
-                    barEl.style.width = `${Math.abs(axisValue) * 50}%`;
-                    barEl.style.left = axisValue > 0 ? '50%' : `${50 - Math.abs(axisValue) * 50}%`;
-                }
-            });
+        const rawGamepads = navigator.getGamepads();
+        visualizerPanel.innerHTML = ''; // Clear and redraw
+        if (rawGamepads.length === 0 || !Object.values(rawGamepads).some(p => p)) {
+            visualizerPanel.textContent = 'No controllers detected. Connect a controller to begin mapping.';
         }
-        
-        animationFrameId = requestAnimationFrame(update);
+
+        for(const gamepad of rawGamepads) {
+            if (!gamepad) continue;
+            
+            // --- Handle Input Mapping ---
+            if (listeningFor) {
+                let capturedInput = null;
+                // Buttons
+                const btnIndex = gamepad.buttons.findIndex(b => b.pressed);
+                if (btnIndex !== -1) capturedInput = `button_${btnIndex}`;
+                // Axes
+                if (!capturedInput) {
+                    const axisIndex = gamepad.axes.findIndex(a => Math.abs(a) > 0.8);
+                    if (axisIndex !== -1) {
+                        const val = gamepad.axes[axisIndex];
+                        capturedInput = `axis_${axisIndex}_${val > 0 ? 'pos' : 'neg'}`;
+                    }
+                }
+                
+                if (capturedInput) {
+                    config.profiles[listeningFor.profile][listeningFor.key] = capturedInput;
+                    controllerManager.saveConfig(config);
+                    listeningFor.element.classList.remove('listening');
+                    listeningFor.element.textContent = capturedInput.replace(/_/g, ' ').toUpperCase();
+                    listeningFor = null;
+                }
+            }
+
+            // --- Draw Visualizer (simplified) ---
+            const div = document.createElement('div');
+            let html = `<h3>[${gamepad.index}] ${gamepad.id}</h3>`;
+            gamepad.buttons.forEach((b, i) => { html += `<span style="padding:5px; margin:2px; border:1px solid #555; background:${b.pressed ? '#F5D94D' : 'transparent'}">B${i}</span>` });
+            html += '<br>';
+            gamepad.axes.forEach((a, i) => { html += ` A${i}: ${a.toFixed(2)}` });
+            div.innerHTML = html;
+            visualizerPanel.appendChild(div);
+        }
+
+        requestAnimationFrame(update);
     }
-
-    // --- Event Listeners ---
-    document.querySelectorAll('.map-button').forEach(button => {
-        button.addEventListener('click', () => {
-            const player = button.dataset.player;
-            const action = button.dataset.action;
-            listenForInput(player, action, button);
-        });
-    });
-
-    saveBtn.addEventListener('click', saveConfig);
     
-    window.addEventListener("gamepadconnected", handleGamepadConnected);
-    window.addEventListener("gamepaddisconnected", handleGamepadDisconnected);
+    // --- Event Handlers ---
+    profileSelector.onchange = populateMappings;
+    newProfileBtn.onclick = () => {
+        const name = prompt("Enter new profile name:");
+        if (name && !config.profiles[name]) {
+            config.profiles[name] = {};
+            controllerManager.saveConfig(config);
+            populateProfileSelector();
+            profileSelector.value = name;
+            populateMappings();
+        }
+    };
+    deleteProfileBtn.onclick = () => {
+        if (Object.keys(config.profiles).length > 1) {
+            const name = profileSelector.value;
+            if (confirm(`Are you sure you want to delete the "${name}" profile?`)) {
+                delete config.profiles[name];
+                controllerManager.saveConfig(config);
+                populateProfileSelector();
+                populateMappings();
+            }
+        }
+    };
 
-    // --- Initial Load ---
-    loadConfig();
-    const initialGamepads = navigator.getGamepads ? navigator.getGamepads() : [];
-    for(const gp of initialGamepads) { if(gp) handleGamepadConnected({gamepad: gp}); }
+    // --- Initial Setup ---
+    populateProfileSelector();
+    populateMappings();
+    populateAssignments();
+    update();
 });
