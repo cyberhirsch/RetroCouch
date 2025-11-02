@@ -3,84 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controller Setup</title>
+    <title>Universal Controller Setup</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-color: #0d0d0f; --panel-bg: #1a1a1d; --panel-border: #333338;
-            --accent-color: #F5D94D; --accent-success: #00FF7F; --text-color: #E4E4E7;
-            --text-secondary: #888890;
-        }
-        body { font-family: 'JetBrains Mono', monospace; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 40px; }
-        .header { width: 100%; max-width: 1200px; margin: 0 auto 40px auto; display: flex; justify-content: space-between; align-items: center; }
-        .header-title { font-size: 36px; font-weight: 700; }
-        .back-button { font-size: 16px; color: var(--text-secondary); text-decoration: none; padding: 8px 16px; border: 2px solid var(--panel-border); border-radius: 6px; transition: all 0.2s; }
+        :root { --bg-color: #0d0d0f; --panel-bg: #1a1a1d; --panel-border: #333338; --accent-color: #F5D94D; --accent-success: #00FF7F; --text-color: #E4E4E7; --text-secondary: #888890; }
+        body { font-family: 'JetBrains Mono', monospace; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .back-button { color: var(--text-secondary); text-decoration: none; border: 2px solid var(--panel-border); padding: 8px 16px; border-radius: 6px; transition: all 0.2s; }
         .back-button:hover { color: var(--accent-color); border-color: var(--accent-color); }
-        #main-container { display: flex; gap: 20px; width: 100%; max-width: 1200px; margin: auto; }
-        #config-panel { flex-basis: 40%; background: var(--panel-bg); border: 2px solid var(--panel-border); border-radius: 8px; padding: 20px; }
-        #visualizer-panel { flex-basis: 60%; }
-        .config-section { margin-bottom: 30px; }
-        .config-title { font-size: 20px; font-weight: 700; color: var(--accent-color); margin-bottom: 15px; }
-        .control-mapping { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .control-label { font-size: 16px; }
-        .map-button { font-family: inherit; font-size: 12px; background: var(--panel-border); border: 1px solid var(--text-secondary); color: var(--text-secondary); border-radius: 4px; padding: 6px 10px; cursor: pointer; min-width: 100px; text-align: center; }
-        .map-button:hover { border-color: var(--accent-color); color: var(--accent-color); }
+        .main-container { display: flex; gap: 20px; }
+        .left-panel { flex: 1; } .right-panel { flex: 2; }
+        .panel { background: var(--panel-bg); border: 2px solid var(--panel-border); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+        .panel-title { font-size: 20px; font-weight: 700; color: var(--accent-color); margin-bottom: 15px; }
+        .profile-actions { display: flex; gap: 10px; margin-bottom: 15px; }
+        select, input, button { font-family: inherit; background: var(--bg-color); color: var(--text-color); border: 1px solid var(--panel-border); padding: 8px; border-radius: 4px; }
+        button { cursor: pointer; }
+        .control-mapping-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px; }
+        .control-mapping { display: flex; justify-content: space-between; align-items: center; }
+        .map-button { min-width: 120px; text-align: center; }
         .map-button.listening { border-color: var(--accent-success); color: var(--accent-success); }
-        .save-button { font-family: inherit; font-size: 16px; background: var(--accent-color); color: var(--bg-color); border: none; border-radius: 6px; padding: 12px; width: 100%; cursor: pointer; font-weight: 700; margin-top: 20px; }
-        #save-status { text-align: center; margin-top: 15px; color: var(--accent-success); opacity: 0; transition: opacity 0.3s; }
-        /* Visualizer styles are the same as before */
-        .gamepad { background: var(--panel-bg); border: 2px solid var(--panel-border); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
-        .gamepad.connected { border-color: var(--accent-color); }
-        .gamepad-name { font-size: 18px; font-weight: 700; margin-bottom: 20px; overflow: hidden; text-overflow: ellipsis; }
-        .gamepad-details { display: flex; gap: 40px; flex-wrap: wrap; }
-        .buttons-container, .axes-container { flex: 1; min-width: 250px; }
-        .container-title { font-size: 14px; color: var(--text-secondary); margin-bottom: 10px; text-transform: uppercase; }
-        .buttons-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 10px; }
-        .button { border: 2px solid var(--panel-border); border-radius: 4px; padding: 8px; text-align: center; font-size: 14px; }
-        .button.pressed { background-color: var(--accent-color); color: var(--bg-color); font-weight: 700; }
-        .axes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px; }
-        .axis-bar { width: 100%; height: 10px; background: var(--bg-color); border: 1px solid var(--panel-border); border-radius: 5px; position: relative; margin-top: 5px; }
-        .axis-value { position: absolute; height: 100%; background: var(--accent-color); border-radius: 5px; }
+        .assignments .control-mapping { margin-bottom: 15px; }
+        /* Visualizer styles are similar to before */
     </style>
 </head>
 <body>
+    <div class="header"><h1>Universal Controller Setup</h1><a href="index.html" class="back-button">&larr; Back</a></div>
 
-    <div class="header">
-        <h1 class="header-title">Controller Setup</h1>
-        <a href="index.html" class="back-button">&larr; Back to Launcher</a>
-    </div>
-
-    <div id="main-container">
-        <div id="config-panel">
-            <div class="config-section">
-                <div class="config-title">Player 1 Controls</div>
-                <div class="control-mapping"><span class="control-label">Up / Thrust</span><button class="map-button" data-player="0" data-action="up">Not Set</button></div>
-                <div class="control-mapping"><span class="control-label">Left</span><button class="map-button" data-player="0" data-action="left">Not Set</button></div>
-                <div class="control-mapping"><span class="control-label">Right</span><button class="map-button" data-player="0" data-action="right">Not Set</button></div>
-                <div class="control-mapping"><span class="control-label">Shoot</span><button class="map-button" data-player="0" data-action="shoot">Not Set</button></div>
+    <div class="main-container">
+        <div class="left-panel">
+            <div class="panel assignments">
+                <div class="panel-title">Gamepad Assignments</div>
+                <div id="assignments-container"></div>
             </div>
-
-            <div class="config-section">
-                <div class="config-title">Player 2 Controls</div>
-                <div class="control-mapping"><span class="control-label">Up / Thrust</span><button class="map-button" data-player="1" data-action="up">Not Set</button></div>
-                <div class="control-mapping"><span class="control-label">Left</span><button class="map-button" data-player="1" data-action="left">Not Set</button></div>
-                <div class="control-mapping"><span class="control-label">Right</span><button class="map-button" data-player="1" data-action="right">Not Set</button></div>
-                <div class="control-mapping"><span class="control-label">Shoot</span><button class="map-button" data-player="1" data-action="shoot">Not Set</button></div>
+            <div class="panel profiles">
+                <div class="panel-title">Profiles</div>
+                <div class="profile-actions">
+                    <select id="profile-selector"></select>
+                    <button id="new-profile-btn">New</button>
+                    <button id="delete-profile-btn">Delete</button>
+                </div>
+                <div class="panel-title">Edit Profile Mappings</div>
+                <div class="control-mapping-grid" id="mapping-container"></div>
             </div>
-             <div class="config-section">
-                <div class="config-title">Global Controls</div>
-                <div class="control-mapping"><span class="control-label">Pause / Menu</span><button class="map-button" data-player="global" data-action="pause">Not Set</button></div>
-                <div class="control-mapping"><span class="control-label">Confirm (Menu)</span><button class="map-button" data-player="global" data-action="confirm">Not Set</button></div>
-            </div>
-
-            <button class="save-button" id="saveBtn">Save Configuration</button>
-            <p id="save-status">Settings Saved!</p>
         </div>
-        <div id="visualizer-panel">
-             <p id="no-gamepad-message">Connect a controller to begin...</p>
+        <div class="right-panel">
+            <div class="panel visualizer">
+                <div class="panel-title">Live Controller Input</div>
+                <div id="visualizer-panel"></div>
+            </div>
         </div>
     </div>
 
+    <script src="ControllerManager.js"></script>
     <script src="setup.js"></script>
 </body>
 </html>
