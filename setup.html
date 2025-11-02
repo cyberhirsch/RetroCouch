@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controller Setup</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d0d0f;
+            --panel-bg: #1a1a1d;
+            --panel-border: #333338;
+            --accent-color: #F5D94D;
+            --text-color: #E4E4E7;
+            --text-secondary: #888890;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            width: 100%;
+            max-width: 960px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .header-title {
+            font-size: 36px;
+            font-weight: 700;
+        }
+
+        .back-button {
+            font-size: 16px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 8px 16px;
+            border: 2px solid var(--panel-border);
+            border-radius: 6px;
+            transition: color 0.2s, border-color 0.2s;
+        }
+
+        .back-button:hover {
+            color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        #gamepads-container {
+            width: 100%;
+            max-width: 960px;
+        }
+
+        .gamepad {
+            background: var(--panel-bg);
+            border: 2px solid var(--panel-border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .gamepad.connected {
+            border-color: var(--accent-color);
+        }
+
+        .gamepad-name {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .gamepad-details {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .buttons-container, .axes-container {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .container-title {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 10px;
+        }
+
+        .button {
+            border: 2px solid var(--panel-border);
+            border-radius: 4px;
+            padding: 8px;
+            text-align: center;
+            font-size: 14px;
+            transition: background-color 0.1s, color 0.1s;
+        }
+
+        .button.pressed {
+            background-color: var(--accent-color);
+            color: var(--bg-color);
+            font-weight: 700;
+        }
+
+        .axes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+        }
+
+        .axis {
+            font-size: 14px;
+        }
+        
+        .axis-bar {
+            width: 100%;
+            height: 10px;
+            background: var(--bg-color);
+            border: 1px solid var(--panel-border);
+            border-radius: 5px;
+            position: relative;
+            margin-top: 5px;
+        }
+
+        .axis-value {
+            position: absolute;
+            height: 100%;
+            background: var(--accent-color);
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1 class="header-title">Controller Setup</h1>
+        <a href="index.html" class="back-button">&larr; Back to Launcher</a>
+    </div>
+
+    <div id="gamepads-container">
+        <p id="no-gamepad-message">Connect a controller to begin...</p>
+    </div>
+
+    <script src="setup.js"></script>
+
+</body>
+</html>
