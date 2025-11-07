@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimal Pong</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            overflow: hidden;
+        }
+        
+        #gameCanvas {
+            display: block;
+            background: #000;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    
+    <script>
+        // ControllerManager.js
+        class ControllerManager {
+            constructor() {
+                this.connectedControllers = [];
+                this.isListening = false;
+                this.mockControllers = [
+                    { id: 'player1', name: 'Player 1', player: 'Player 1', profile: 'Default', device: 'keyboard' },
+                    { id: 'player2', name: 'Player 2', player: 'Player 2', profile: 'Default', device: 'keyboard' }
+                ];
+            }
+            
+            startListening() {
+                this.isListening = true;
+                this.connectedControllers = [...this.mockControllers];
+            }
+            
+            getConnectedControllers() {
+                return this.connectedControllers;
+            }
+            
+            simulateInput(player, control, value) {
+                if (!this.isListening) return;
+                
+                const event = new CustomEvent('controllerinput', {
+                    detail: {
+                        player: player,
+                        profile: 'Default',
+                        control: control,
+                        value: value,
+                        timestamp: Date.now()
+                    }
+                });
+                
+                window.dispatchEvent(event);
+            }
+        }
+        
+        window.ControllerManager = new ControllerManager();
+    </script>
+    
+    <script>
+        class PongGame {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                
+                // Set canvas to fill screen
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+                this.width = this.canvas.width;
+                this.height = this.canvas.height;
+                
+                // Game objects - proportional to screen
+                this.paddleWidth = Math.max(4, this.width * 0.005);
+                this.paddleHeight = Math.max(60, this.height * 0.15);
+                this.ballSize = Math.max(3, this.width * 0.008);
+                this.paddleSpeed = Math.max(3, Math.min(8, this.height * 0.015));
+                this.ballSpeed = Math.max(2, Math.min(6, this.width * 0.005));
+                
+                // Players
+                this.players = {
+                    'Player 1': {
+                        x: this.paddleWidth * 2,
+                        y: this.height / 2 - this.paddleHeight / 2,
+                        score: 0,
+                        input: { up: false, down: false }
+                    },
+                    'Player 2': {
+                        x: this.width - this.paddleWidth * 3,
+                        y: this.height / 2 - this.paddleHeight / 2,
+                        score: 0,
+                        input: { up: false, down: false }
+                    }
+                };
+                
+                // Ball (using radius for circular ball)
+                this.ball = {
+                    x: this.width / 2,
+                    y: this.height / 2,
+                    dx: this.ballSpeed,
+                    dy: this.ballSpeed * 0.3 * (Math.random() > 0.5 ? 1 : -1),
+                    radius: this.ballSize / 2
+                };
+                
+                // Track last ball direction for alternating serves
+                this.lastBallDirection = this.ball.dx > 0 ? 1 : -1; // Set based on initial direction
+                
+                this.setupEventListeners();
+                this.setupControllerListeners();
+                this.gameLoop();
+            }
+            
+            setupEventListeners() {
+                document.addEventListener('keydown', (e) => this.handleKeyDown(e));
+                document.addEventListener('keyup', (e) => this.handleKeyUp(e));
+                
+                // Handle window resize
+                window.addEventListener('resize', () => {
+                    this.canvas.width = window.innerWidth;
+                    this.canvas.height = window.innerHeight;
+                    this.width = this.canvas.width;
+                    this.height = this.canvas.height;
+                });
+            }
+            
+            setupControllerListeners() {
+                window.addEventListener('controllerinput', (event) => {
+                    this.handleControllerInput(event.detail);
+                });
+            }
+            
+            handleKeyDown(event) {
+                switch(event.code) {
+                    case 'KeyW':
+                        this.players['Player 1'].input.up = true;
+                        break;
+                    case 'KeyS':
+                        this.players['Player 1'].input.down = true;
+                        break;
+                    case 'ArrowUp':
+                        this.players['Player 2'].input.up = true;
+                        break;
+                    case 'ArrowDown':
+                        this.players['Player 2'].input.down = true;
+                        break;
+                }
+            }
+            
+            handleKeyUp(event) {
+                switch(event.code) {
+                    case 'KeyW':
+                        this.players['Player 1'].input.up = false;
+                        break;
+                    case 'KeyS':
+                        this.players['Player 1'].input.down = false;
+                        break;
+                    case 'ArrowUp':
+                        this.players['Player 2'].input.up = false;
+                        break;
+                    case 'ArrowDown':
+                        this.players['Player 2'].input.down = false;
+                        break;
+                }
+            }
+            
+            handleControllerInput(input) {
+                const { player, control, value } = input;
+                
+                if (player in this.players) {
+                    switch(control) {
+                        case 'move_up':
+                            this.players[player].input.up = value > 0.5;
+                            break;
+                        case 'move_down':
+                            this.players[player].input.down = value > 0.5;
+                            break;
+                    }
+                }
+            }
+            
+            update() {
+                // Update player positions
+                const scoreboardHeight = Math.max(20, this.width * 0.03) + 40; // Account for scoreboard
+                
+                Object.keys(this.players).forEach(playerName => {
+                    const player = this.players[playerName];
+                    
+                    if (player.input.up) {
+                        player.y -= this.paddleSpeed;
+                    }
+                    if (player.input.down) {
+                        player.y += this.paddleSpeed;
+                    }
+                    
+                    // Keep paddle in bounds (account for scoreboard at top)
+                    player.y = Math.max(scoreboardHeight, Math.min(this.height - this.paddleHeight, player.y));
+                });
+                
+                // Update ball
+                this.ball.x += this.ball.dx;
+                this.ball.y += this.ball.dy;
+                
+                // Check wall collisions (angle of incidence = angle of reflection)
+                if (this.ball.y - this.ball.radius <= 0) {
+                    this.ball.y = this.ball.radius;
+                    this.ball.dy = Math.abs(this.ball.dy); // Reverse Y component
+                } else if (this.ball.y + this.ball.radius >= this.height) {
+                    this.ball.y = this.height - this.ball.radius;
+                    this.ball.dy = -Math.abs(this.ball.dy); // Reverse Y component
+                }
+                
+                // Check paddle collisions (flat paddle = wall reflection)
+                Object.keys(this.players).forEach(playerName => {
+                    const player = this.players[playerName];
+                    
+                    if (this.checkPaddleCollision(this.ball, player)) {
+                        // Simple wall reflection: reverse X direction, keep Y direction
+                        this.ball.dx = -this.ball.dx;
+                        
+                        // Add slight paddle movement influence (small effect)
+                        if (player.input.up) {
+                            this.ball.dy *= 0.95; // Slight upward bias
+                        } else if (player.input.down) {
+                            this.ball.dy *= 1.05; // Slight downward bias
+                        }
+                        
+                        // Prevent ball from getting stuck in paddle
+                        if (playerName === 'Player 1') {
+                            this.ball.x = player.x + this.paddleWidth + this.ball.radius;
+                        } else {
+                            this.ball.x = player.x - this.ball.radius;
+                        }
+                    }
+                });
+                
+                // Check scoring (when ball completely passes the edge)
+                if (this.ball.x + this.ball.radius <= 0) {
+                    this.players['Player 2'].score++;
+                    this.resetBall('Player 2');
+                } else if (this.ball.x - this.ball.radius >= this.width) {
+                    this.players['Player 1'].score++;
+                    this.resetBall('Player 1');
+                }
+            }
+            
+            checkPaddleCollision(ball, player) {
+                // Circle to rectangle collision detection
+                const closestX = Math.max(player.x, Math.min(ball.x, player.x + this.paddleWidth));
+                const closestY = Math.max(player.y, Math.min(ball.y, player.y + this.paddleHeight));
+                
+                const distanceX = ball.x - closestX;
+                const distanceY = ball.y - closestY;
+                
+                return (distanceX * distanceX + distanceY * distanceY) <= (ball.radius * ball.radius);
+            }
+            
+            resetBall(scoringPlayer) {
+                this.ball.x = this.width / 2;
+                this.ball.y = this.height / 2;
+                this.ball.radius = this.ballSize / 2;
+                
+                // Serve in opposite direction from last serve
+                this.ball.dx = -this.lastBallDirection * this.ballSpeed;
+                this.ball.dy = this.ballSpeed * 0.3 * (Math.random() * 2 - 1);
+                
+                // Update last direction for next serve (based on current direction)
+                this.lastBallDirection = this.ball.dx > 0 ? 1 : -1;
+            }
+            
+            render() {
+                // Clear screen
+                this.ctx.fillStyle = '#000';
+                this.ctx.fillRect(0, 0, this.width, this.height);
+                
+                // Draw scoreboard
+                this.renderScoreboard();
+                
+                // Draw paddles
+                this.ctx.fillStyle = '#fff';
+                this.ctx.fillRect(this.players['Player 1'].x, this.players['Player 1'].y, this.paddleWidth, this.paddleHeight);
+                this.ctx.fillRect(this.players['Player 2'].x, this.players['Player 2'].y, this.paddleWidth, this.paddleHeight);
+                
+                // Draw ball (circular)
+                this.ctx.beginPath();
+                this.ctx.arc(this.ball.x, this.ball.y, this.ball.radius, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
+            
+            renderScoreboard() {
+                this.ctx.fillStyle = '#fff';
+                this.ctx.font = `${Math.max(20, this.width * 0.03)}px Arial, sans-serif`;
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'top';
+                
+                const scoreboardY = 20;
+                const text = `${this.players['Player 1'].score}     ${this.players['Player 2'].score}`;
+                this.ctx.fillText(text, this.width / 2, scoreboardY);
+            }
+            
+            gameLoop() {
+                this.update();
+                this.render();
+                requestAnimationFrame(() => this.gameLoop());
+            }
+        }
+        
+        // Initialize game
+        window.addEventListener('load', () => {
+            new PongGame();
+            window.ControllerManager.startListening();
+        });
+    </script>
+</body>
+</html>
