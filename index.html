@@ -3,73 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Launcher</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <title>Game Arcade</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0d0d0f;
-            --grid-bg: #1a1a1d;
-            --grid-border: #333338;
-            --accent-color: #F5D94D;
-            --text-color: #E4E4E7;
-            --text-secondary: #888890;
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #2a2a2a;
+            --border-color: #333333;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --text-muted: #666666;
+            --accent-primary: #00d4aa;
+            --accent-secondary: #00b896;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            font-family: 'JetBrains Mono', monospace;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 40px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
             min-height: 100vh;
+            line-height: 1.6;
         }
 
         .header {
-            width: 100%;
-            max-width: 960px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 40px;
         }
 
-        .header-title {
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-links a.active {
+            color: var(--accent-primary);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .header-link:hover {
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+        }
+
+        .main-content {
+            padding: 32px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .page-title {
             font-size: 36px;
             font-weight: 700;
-            color: var(--accent-color);
+            margin-bottom: 8px;
+            color: var(--text-primary);
         }
 
-        .settings-button {
-            background: none;
-            border: none;
-            cursor: pointer;
+        .page-subtitle {
+            font-size: 16px;
             color: var(--text-secondary);
-            padding: 8px;
-            display: inline-block; /* For proper link behavior */
-            transition: color 0.2s ease, transform 0.2s ease;
+            margin-bottom: 32px;
         }
 
-        .settings-button:hover {
-            color: var(--accent-color);
-            transform: rotate(45deg);
+        .games-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-primary);
         }
 
         .game-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 20px;
-            width: 100%;
-            max-width: 960px;
         }
 
         .game-slot {
             aspect-ratio: 4 / 3;
-            background-color: var(--grid-bg);
-            border: 2px solid var(--grid-border);
+            background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+            border: 2px solid var(--border-color);
             border-radius: 8px;
             display: flex;
             flex-direction: column;
@@ -77,56 +147,612 @@
             justify-content: center;
             text-decoration: none;
             color: var(--text-color);
-            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-slot::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent 0%, var(--accent-primary) 0%);
+            transition: all 0.3s ease;
+            opacity: 0;
+            z-index: 1;
+        }
+
+        .game-slot:hover::before {
+            opacity: 0.05;
         }
 
         .game-slot.active:hover {
-            transform: scale(1.05);
-            border-color: var(--accent-color);
-            box-shadow: 0 0 20px rgba(245, 217, 77, 0.3);
-        }
-        
-        .game-slot.empty {
-             color: var(--text-secondary);
+            transform: translateY(-2px);
+            border-color: var(--accent-primary);
+            box-shadow: 0 8px 25px rgba(0, 212, 170, 0.15);
         }
 
-        .game-title {
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 8px;
+        .game-slot.empty {
+            cursor: default;
+            opacity: 0.6;
+        }
+
+        .game-slot.empty:hover {
+            transform: none;
+            border-color: var(--border-color);
+            box-shadow: none;
+        }
+
+        .game-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
         }
 
         .game-icon {
             font-size: 48px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .game-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .game-description {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .empty-text {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .settings-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .settings-link:hover {
+            color: var(--accent-primary);
+            background-color: var(--bg-tertiary);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header {
+                padding: 12px 16px;
+            }
+            
+            .logo {
+                font-size: 20px;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            .page-title {
+                font-size: 28px;
+            }
+            
+            .games-section {
+                padding: 16px;
+            }
+            
+            .game-grid {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-actions {
+                gap: 8px;
+            }
+            
+            .nav-link {
+                padding: 6px 8px;
+                font-size: 14px;
+            }
+            
+            .game-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">GameArcade</div>
+            <nav class="nav-links">
+                <a href="index.html" class="active">Games</a>
+                <a href="setup.html" title="Developer Integration Guide">API Docs</a>
+            </nav>
+        </div>
+        <div class="header-right">
+            <a href="setup.html" class="header-link" title="Controller Setup">
+                <i class="fas fa-cog"></i>
+            </a>
+        </div>
+    </header>
 
-    <div class="header">
-        <div class="header-title">Game Arcade</div>
-        <a href="setup.html" class="settings-button" title="Controller Settings">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-        </a>
+    <div class="main-content">
+        <h1 class="page-title">Game Collection</h1>
+        <p class="page-subtitle">Choose your game and start playing</p>
+
+        <div class="games-section">
+            <h2 class="section-title">Available Games</h2>
+            <div class="game-grid">
+                <!-- Game 1: Blasteroids -->
+                <a href="blasteroids.html" class="game-slot active">
+                    <div class="game-content">
+                        <span class="game-icon">🚀</span>
+                        <div class="game-title">Blasteroids</div>
+                        <div class="game-description">Classic space shooter game. Blast asteroids and survive waves of enemies.</div>
+                    </div>
+                </a>
+
+                <!-- Placeholder Slots -->
+                <div class="game-slot empty">
+                    <div class="game-content">
+                        <span class="game-icon">🎮</span>
+                        <div class="game-title empty-text">Coming Soon</div>
+                        <div class="game-description">New games will be added to this collection</div>
+                    </div>
+                </div>
+
+                <div class="game-slot empty">
+                    <div class="game-content">
+                        <span class="game-icon">🎯</span>
+                        <div class="game-title empty-text">Coming Soon</div>
+                        <div class="game-description">New games will be added to this collection</div>
+                    </div>
+                </div>
+
+                <div class="game-slot empty">
+                    <div class="game-content">
+                        <span class="game-icon">🏆</span>
+                        <div class="game-title empty-text">Coming Soon</div>
+                        <div class="game-description">New games will be added to this collection</div>
+                    </div>
+                </div>
+
+                <div class="game-slot empty">
+                    <div class="game-content">
+                        <span class="game-icon">💎</span>
+                        <div class="game-title empty-text">Coming Soon</div>
+                        <div class="game-description">New games will be added to this collection</div>
+                    </div>
+                </div>
+
+                <div class="game-slot empty">
+                    <div class="game-content">
+                        <span class="game-icon">⚡</span>
+                        <div class="game-title empty-text">Coming Soon</div>
+                        <div class="game-description">New games will be added to this collection</div>
+                    </div>
+                </div>
+
+                <div class="game-slot empty">
+                    <div class="game-content">
+                        <span class="game-icon">🌟</span>
+                        <div class="game-title empty-text">Coming Soon</div>
+                        <div class="game-description">New games will be added to this collection</div>
+                    </div>
+                </div>
+
+                <div class="game-slot empty">
+                    <div class="game-content">
+                        <span class="game-icon">🎪</span>
+                        <div class="game-title empty-text">Coming Soon</div>
+                        <div class="game-description">New games will be added to this collection</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="controllermanager.js"></script>
+    <script>
+        // Check if player setup exists when index.html loads
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if we have a valid player setup
+            const hasValidSetup = (() => {
+                try {
+                    const savedSetup = localStorage.getItem('gamearcade_player_setup');
+                    if (!savedSetup) return false;
+                    
+                    const parsedSetup = JSON.parse(savedSetup);
+                    // Check if at least one player has a profile assigned
+                    return parsedSetup.some(player => player.profile && player.profile !== '');
+                } catch (error) {
+                    console.error('Error checking player setup:', error);
+                    return false;
+                }
+            })();
+            
+            // If no valid setup exists, redirect to setup page
+            if (!hasValidSetup) {
+                console.log('No valid player setup found, redirecting to setup page...');
+                window.location.href = 'setup.html';
+            }
+        });
+    </script>
+
+    <!-- Developer Documentation Section -->
+    <div class="docs-section" id="developer-docs" style="display: none;">
+        <div class="header">
+            <div class="header-left">
+                <div class="logo">GameArcade</div>
+                <nav class="nav-links">
+                    <a href="index.html">Games</a>
+                    <a href="#" title="Developer Integration Guide" class="active">API Docs</a>
+                </nav>
+            </div>
+            <div class="header-right">
+                <a href="setup.html" class="header-link">
+                    <i class="fas fa-cog"></i>
+                </a>
+            </div>
+        </div>
+        <div class="docs-container">
+            <div class="docs-header">
+                <h2><i class="fas fa-code"></i> Developer Integration Guide</h2>
+                <p>Complete guide for integrating ControllerManager into your games</p>
+            </div>
+            
+            <div class="docs-content">
+                <div class="docs-section-block">
+                    <h3><i class="fas fa-play-circle"></i> Quick Start</h3>
+                    <div class="code-block">
+                        <pre><code>// 1. Include ControllerManager in your game
+&lt;script src="ControllerManager.js"&gt;&lt;/script&gt;
+
+// 2. Listen for controller input events
+document.addEventListener('controllerinput', function(event) {
+    const input = event.detail;
+    
+    // Handle different input types
+    if (input.type === 'button') {
+        if (input.button === 'jump' && input.pressed) {
+            player.jump();
+        }
+        if (input.button === 'fire' && input.pressed) {
+            player.shoot();
+        }
+    }
+    
+    if (input.type === 'stick') {
+        player.move(input.x, input.y);
+    }
+});
+
+// 3. Start listening for controllers
+window.ControllerManager.startListening();</code></pre>
+                    </div>
+                </div>
+
+                <div class="docs-section-block">
+                    <h3><i class="fas fa-api"></i> ControllerManager API</h3>
+                    
+                    <h4>Event System</h4>
+                    <div class="api-item">
+                        <code>controllerinput</code>
+                        <p>Fired when any controller input is detected</p>
+                        <code>detail.type</code> - 'button' or 'stick'<br>
+                        <code>detail.player</code> - Player number (1-4)<br>
+                        <code>detail.button</code> - Button name (for buttons)<br>
+                        <code>detail.x, detail.y</code> - Stick position (for sticks)
+                    </div>
+                    
+                    <div class="api-item">
+                        <code>controllerconnected</code>
+                        <p>Fired when a controller connects</p>
+                        <code>detail.player</code> - Player number<br>
+                        <code>detail.index</code> - Gamepad index
+                    </div>
+                    
+                    <div class="api-item">
+                        <code>controllerdisconnected</code>
+                        <p>Fired when a controller disconnects</p>
+                        <code>detail.player</code> - Player number<br>
+                        <code>detail.index</code> - Gamepad index
+                    </div>
+                </div>
+
+                <div class="docs-section-block">
+                    <h3><i class="fas fa-cog"></i> Setup API</h3>
+                    <div class="api-item">
+                        <code>window.GameArcadeSetup.getPlayerSetup()</code>
+                        <p>Get current player setup configuration</p>
+                    </div>
+                    <div class="api-item">
+                        <code>window.GameArcadeSetup.hasValidSetup()</code>
+                        <p>Check if any player has valid setup</p>
+                    </div>
+                </div>
+
+                <div class="docs-section-block">
+                    <h3><i class="fas fa-gamepad"></i> Complete Game Example</h3>
+                    <div class="code-block">
+                        <pre><code>&lt;!-- In your game HTML --&gt;
+&lt;script src="ControllerManager.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+class ExampleGame {
+    constructor() {
+        this.setupEventListeners();
+        ControllerManager.startListening();
+        this.setupAPI();
+    }
+    
+    setupEventListeners() {
+        document.addEventListener('controllerinput', (e) => this.handleInput(e));
+        document.addEventListener('controllerconnected', (e) => this.handleConnection(e));
+        document.addEventListener('controllerdisconnected', (e) => this.handleDisconnection(e));
+    }
+    
+    handleInput(event) {
+        const input = event.detail;
+        
+        if (input.player === 1) { // Player 1 controls
+            if (input.type === 'button' && input.button === 'jump' && input.pressed) {
+                this.player1.jump();
+            }
+            if (input.type === 'stick') {
+                this.player1.move(input.x, input.y);
+            }
+        }
+    }
+    
+    setupAPI() {
+        // Get player setup info
+        const setup = window.GameArcadeSetup.getPlayerSetup();
+        console.log('Current setup:', setup);
+    }
+}
+
+const game = new ExampleGame();
+&lt;/script&gt;</code></pre>
+                    </div>
+                </div>
+
+                <div class="docs-section-block">
+                    <h3><i class="fas fa-info-circle"></i> Important Notes</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <h4>Performance</h4>
+                            <p>ControllerManager polls at 60 FPS. Only listen to events you need to avoid performance issues.</p>
+                        </div>
+                        <div class="info-item">
+                            <h4>Setup Validation</h4>
+                            <p>Always check if players have valid setup before starting your game. Use GameArcadeSetup.hasValidSetup().</p>
+                        </div>
+                        <div class="info-item">
+                            <h4>Player Assignment</h4>
+                            <p>Players are assigned based on setup order. Player 1 uses first connected controller, etc.</p>
+                        </div>
+                        <div class="info-item">
+                            <h4>Hot Swapping</h4>
+                            <p>Controllers can be connected/disconnected during gameplay. Check connection status as needed.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="docs-section-block">
+                    <h3><i class="fas fa-bug"></i> Troubleshooting</h3>
+                    <div class="troubleshooting-item">
+                        <strong>Controllers not responding?</strong>
+                        <ul>
+                            <li>Check if ControllerManager is loaded: <code>console.log(window.ControllerManager)</code></li>
+                            <li>Verify player setup exists: <code>console.log(window.GameArcadeSetup.getPlayerSetup())</code></li>
+                            <li>Ensure setup has valid profiles assigned</li>
+                        </ul>
+                    </div>
+                    <div class="troubleshooting-item">
+                        <strong>Events not firing?</strong>
+                        <ul>
+                            <li>Call <code>ControllerManager.startListening()</code> after adding event listeners</li>
+                            <li>Check browser console for errors</li>
+                            <li>Verify controllers are connected</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="game-grid">
-        <!-- Game 1: Blasteroids -->
-        <a href="blasteroids.html" class="game-slot active">
-            <div class="game-icon">🚀</div>
-            <div class="game-title">Blasteroids</div>
-        </a>
-
-        <!-- Placeholder Slots -->
-        <div class="game-slot empty"><span>Coming Soon</span></div>
-        <div class="game-slot empty"><span>Coming Soon</span></div>
-        <div class="game-slot empty"><span>Coming Soon</span></div>
-        <div class="game-slot empty"><span>Coming Soon</span></div>
-        <div class="game-slot empty"><span>Coming Soon</span></div>
-        <div class="game-slot empty"><span>Coming Soon</span></div>
-        <div class="game-slot empty"><span>Coming Soon</span></div>
-        <div class="game-slot empty"><span>Coming Soon</span></div>
-    </div>
-
+    <style>
+        .docs-section {
+            background: var(--bg-primary);
+            min-height: 100vh;
+            padding: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .docs-section .header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .docs-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 32px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .docs-header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .docs-header h2 {
+            font-size: 32px;
+            color: var(--accent-primary);
+            margin-bottom: 8px;
+        }
+        
+        .docs-header p {
+            color: var(--text-secondary);
+            font-size: 18px;
+        }
+        
+        .docs-section-block {
+            margin-bottom: 48px;
+        }
+        
+        .docs-section-block h3 {
+            font-size: 24px;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .docs-section-block h4 {
+            font-size: 18px;
+            color: var(--text-primary);
+            margin: 24px 0 12px 0;
+        }
+        
+        .code-block {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 16px 0;
+            overflow-x: auto;
+        }
+        
+        .code-block code {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-primary);
+        }
+        
+        .code-block pre {
+            margin: 0;
+            padding: 0;
+        }
+        
+        .api-item {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            margin: 12px 0;
+        }
+        
+        .api-item code {
+            background: var(--accent-primary);
+            color: var(--bg-primary);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        
+        .info-item {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+        }
+        
+        .info-item h4 {
+            color: var(--accent-primary);
+            margin-bottom: 8px;
+        }
+        
+        .troubleshooting-item {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--warning);
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        
+        .troubleshooting-item strong {
+            color: var(--warning);
+        }
+        
+        .troubleshooting-item ul {
+            margin-top: 8px;
+            padding-left: 20px;
+        }
+        
+        .troubleshooting-item li {
+            margin: 4px 0;
+        }
+    </style>
+    
+    <script>
+        // Developer Docs navigation
+        function showDeveloperDocs() {
+            document.getElementById('developer-docs').style.display = 'block';
+            window.scrollTo(0, 0);
+        }
+        
+        function hideDeveloperDocs() {
+            document.getElementById('developer-docs').style.display = 'none';
+        }
+        
+        // Update the Docs link to show the section
+        document.addEventListener('DOMContentLoaded', function() {
+            const docsLink = document.querySelector('a[title="Developer Integration Guide"]');
+            if (docsLink) {
+                docsLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showDeveloperDocs();
+                });
+            }
+            
+            // Handle close button in docs header
+            const closeLink = document.querySelector('.docs-section .header-link[onclick]');
+            if (closeLink) {
+                closeLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    hideDeveloperDocs();
+                });
+            }
+        });
+    </script>
 </body>
 </html>

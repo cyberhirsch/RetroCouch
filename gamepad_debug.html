@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gamepad Debug Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .status-banner {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .connected { background: #28a745; }
+        .disconnected { background: #dc3545; }
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            margin: 20px 0;
+        }
+        .button {
+            padding: 10px;
+            text-align: center;
+            border: 2px solid #555;
+            border-radius: 5px;
+            min-height: 40px;
+        }
+        .pressed {
+            background: #00ff00;
+            color: black;
+        }
+        .stick {
+            width: 100px;
+            height: 100px;
+            border: 2px solid #555;
+            border-radius: 50%;
+            position: relative;
+            margin: 10px;
+            display: inline-block;
+        }
+        .stick-dot {
+            width: 10px;
+            height: 10px;
+            background: #fff;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.1s;
+        }
+        .debug-log {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 20px 0;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Gamepad Debug Tool</h1>
+    
+    <div id="statusBanner" class="status-banner disconnected">
+        Status: No gamepad detected. Connect your gamepad and press any button.
+    </div>
+
+    <div>
+        <button onclick="manualScan()">Manual Scan for Gamepads</button>
+        <button onclick="clearLog()">Clear Debug Log</button>
+        <button onclick="testGamepadAPI()">Test Gamepad API</button>
+    </div>
+
+    <h2>Raw Gamepad Data</h2>
+    <div id="rawData">No gamepad data available</div>
+
+    <h2>Button States (Gamepad 1)</h2>
+    <div class="button-grid" id="buttonGrid">
+        <div class="button" id="btn0">Button 0</div>
+        <div class="button" id="btn1">Button 1</div>
+        <div class="button" id="btn2">Button 2</div>
+        <div class="button" id="btn3">Button 3</div>
+        <div class="button" id="btn4">Button 4</div>
+        <div class="button" id="btn5">Button 5</div>
+        <div class="button" id="btn6">Button 6</div>
+        <div class="button" id="btn7">Button 7</div>
+        <div class="button" id="btn8">Button 8</div>
+        <div class="button" id="btn9">Button 9</div>
+        <div class="button" id="btn10">Button 10</div>
+        <div class="button" id="btn11">Button 11</div>
+        <div class="button" id="btn12">Button 12</div>
+        <div class="button" id="btn13">Button 13</div>
+        <div class="button" id="btn14">Button 14</div>
+        <div class="button" id="btn15">Button 15</div>
+    </div>
+
+    <h2>Analog Sticks</h2>
+    <div>
+        <div>
+            <h3>Left Stick</h3>
+            <div class="stick">
+                <div class="stick-dot" id="leftStick"></div>
+            </div>
+            <div>X: <span id="leftX">0.00</span> Y: <span id="leftY">0.00</span></div>
+        </div>
+        <div>
+            <h3>Right Stick</h3>
+            <div class="stick">
+                <div class="stick-dot" id="rightStick"></div>
+            </div>
+            <div>X: <span id="rightX">0.00</span> Y: <span id="rightY">0.00</span></div>
+        </div>
+    </div>
+
+    <h2>Debug Log</h2>
+    <div class="debug-log" id="debugLog"></div>
+
+    <script>
+        let gamepadIndex = -1;
+        let lastUpdate = 0;
+
+        function log(message) {
+            const logDiv = document.getElementById('debugLog');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${timestamp}] ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+
+        function clearLog() {
+            document.getElementById('debugLog').innerHTML = '';
+        }
+
+        function testGamepadAPI() {
+            log('=== Testing Gamepad API ===');
+            log('navigator.getGamepads supported: ' + (!!navigator.getGamepads));
+            log('Gamepad API available: ' + (!!navigator.getGamepads));
+            
+            if (navigator.getGamepads) {
+                const gamepads = navigator.getGamepads();
+                log('Raw getGamepads(): ' + JSON.stringify(gamepads, null, 2));
+                log('Array length: ' + gamepads.length);
+                for (let i = 0; i < gamepads.length; i++) {
+                    if (gamepads[i]) {
+                        log(`Gamepad ${i}: ${gamepads[i].id}`);
+                    }
+                }
+            } else {
+                log('ERROR: navigator.getGamepads is not available!');
+            }
+        }
+
+        function manualScan() {
+            log('=== Manual Scan Initiated ===');
+            testGamepadAPI();
+            scanForGamepads();
+        }
+
+        function scanForGamepads() {
+            log('Scanning for gamepads...');
+            const gamepads = navigator.getGamepads();
+            
+            for (let i = 0; i < gamepads.length; i++) {
+                if (gamepads[i]) {
+                    log(`Found gamepad at index ${i}: ${gamepads[i].id}`);
+                    if (gamepadIndex === -1) {
+                        gamepadIndex = i;
+                        log(`Setting gamepad index to ${i}`);
+                        updateConnectionStatus(gamepads[i]);
+                    }
+                }
+            }
+            
+            if (gamepadIndex === -1) {
+                log('No gamepads found in scan');
+                updateConnectionStatus(null);
+            }
+        }
+
+        function updateConnectionStatus(gamepad) {
+            const banner = document.getElementById('statusBanner');
+            const rawData = document.getElementById('rawData');
+            
+            if (gamepad) {
+                banner.className = 'status-banner connected';
+                banner.textContent = `Status: Gamepad connected - ${gamepad.id}`;
+                rawData.innerHTML = `
+                    <strong>ID:</strong> ${gamepad.id}<br>
+                    <strong>Mapping:</strong> ${gamepad.mapping}<br>
+                    <strong>Buttons:</strong> ${gamepad.buttons.length}<br>
+                    <strong>Axes:</strong> ${gamepad.axes.length}<br>
+                    <strong>Index:</strong> ${gamepad.index}
+                `;
+                log(`Gamepad connected: ${gamepad.id} (index: ${gamepad.index})`);
+            } else {
+                banner.className = 'status-banner disconnected';
+                banner.textContent = 'Status: No gamepad detected. Connect your gamepad and press any button.';
+                rawData.innerHTML = 'No gamepad data available';
+                log('No gamepad connected');
+            }
+        }
+
+        function updateButtonStates(gamepad) {
+            for (let i = 0; i < 16; i++) {
+                const btn = document.getElementById(`btn${i}`);
+                if (i < gamepad.buttons.length) {
+                    const pressed = gamepad.buttons[i].pressed;
+                    btn.className = pressed ? 'button pressed' : 'button';
+                    btn.textContent = `Button ${i}${pressed ? ' (PRESSED)' : ''}`;
+                } else {
+                    btn.className = 'button';
+                    btn.textContent = `Button ${i}`;
+                }
+            }
+        }
+
+        function updateStick(selector, xValue, yValue) {
+            const dot = document.getElementById(selector);
+            const x = (xValue + 1) * 40; // Convert -1 to 1 range to 0 to 80
+            const y = (-yValue + 1) * 40; // Invert Y axis
+            dot.style.left = `${x + 10}px`;
+            dot.style.top = `${y + 10}px`;
+        }
+
+        function update() {
+            const now = performance.now();
+            if (now - lastUpdate < 16) return; // ~60fps limit
+            lastUpdate = now;
+
+            const gamepads = navigator.getGamepads();
+            
+            if (gamepadIndex >= 0 && gamepads[gamepadIndex]) {
+                const gamepad = gamepads[gamepadIndex];
+                updateButtonStates(gamepad);
+                
+                // Update analog sticks (first 4 axes = 2 sticks)
+                if (gamepad.axes.length >= 4) {
+                    document.getElementById('leftX').textContent = gamepad.axes[0].toFixed(2);
+                    document.getElementById('leftY').textContent = gamepad.axes[1].toFixed(2);
+                    document.getElementById('rightX').textContent = gamepad.axes[2].toFixed(2);
+                    document.getElementById('rightY').textContent = gamepad.axes[3].toFixed(2);
+                    
+                    updateStick('leftStick', gamepad.axes[0], gamepad.axes[1]);
+                    updateStick('rightStick', gamepad.axes[2], gamepad.axes[3]);
+                }
+            }
+        }
+
+        // Event listeners
+        window.addEventListener('gamepadconnected', (e) => {
+            log(`Gamepad connected: ${e.gamepad.id} (index: ${e.gamepad.index})`);
+            if (gamepadIndex === -1) {
+                gamepadIndex = e.gamepad.index;
+                updateConnectionStatus(e.gamepad);
+            }
+        });
+
+        window.addEventListener('gamepaddisconnected', (e) => {
+            log(`Gamepad disconnected: ${e.gamepad.id} (index: ${e.gamepad.index})`);
+            if (gamepadIndex === e.gamepad.index) {
+                gamepadIndex = -1;
+                updateConnectionStatus(null);
+            }
+        });
+
+        // Initialize
+        log('Gamepad Debug Tool initialized');
+        log('Press any button on your gamepad to wake it up');
+        testGamepadAPI();
+        scanForGamepads();
+        
+        // Start update loop
+        function gameLoop() {
+            update();
+            requestAnimationFrame(gameLoop);
+        }
+        gameLoop();
+    </script>
+</body>
+</html>
