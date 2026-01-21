@@ -78,7 +78,8 @@ export class UIManager {
         }
 
         try {
-            const module = await import(gameMetadata.modulePath);
+            // Prepend ../ because this script is in /js/ and game modules are in /games/
+            const module = await import('../' + gameMetadata.modulePath);
             if (module.initGame) {
                 this.currentGame = module.initGame(this.canvas, this.cs);
                 this.currentGame.start();

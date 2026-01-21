@@ -12,7 +12,7 @@ export const games = [
         enabled: true,
         color: 'linear-gradient(135deg, #7c4dff, #00e5ff)',
         icon: '🎮',
-        modulePath: '/games/input-tester/game.js',
+        modulePath: 'games/input-tester/game.js',
         fullscreen: false
     },
     {
@@ -24,7 +24,7 @@ export const games = [
         enabled: true,
         color: 'linear-gradient(135deg, #7c4dff, #00e5ff)',
         icon: '🏓',
-        modulePath: '/games/pong/game.js',
+        modulePath: 'games/pong/game.js',
         fullscreen: true
     },
     {
@@ -36,7 +36,7 @@ export const games = [
         enabled: true,
         color: 'linear-gradient(135deg, #00e5ff, #7c4dff)',
         icon: '🧱',
-        modulePath: '/games/breakout/game.js',
+        modulePath: 'games/breakout/game.js',
         fullscreen: true
     },
     {
@@ -48,7 +48,7 @@ export const games = [
         enabled: true,
         color: 'linear-gradient(135deg, #69f0ae, #00e5ff)',
         icon: '🐍',
-        modulePath: '/games/snake/game.js',
+        modulePath: 'games/snake/game.js',
         fullscreen: true
     },
     {
@@ -60,7 +60,7 @@ export const games = [
         enabled: true,
         color: 'linear-gradient(135deg, #7c4dff, #69f0ae)',
         icon: '🛸',
-        modulePath: '/games/space-invaders/game.js',
+        modulePath: 'games/space-invaders/game.js',
         fullscreen: true
     },
     {
@@ -72,7 +72,7 @@ export const games = [
         enabled: true,
         color: 'linear-gradient(135deg, #7c4dff, #ff5252)',
         icon: '🚜',
-        modulePath: '/games/cyber-tanks/game.js',
+        modulePath: 'games/cyber-tanks/game.js',
         fullscreen: true
     },
     {
@@ -84,7 +84,7 @@ export const games = [
         enabled: true,
         color: 'linear-gradient(135deg, #00e5ff, #69f0ae)',
         icon: '🏎️',
-        modulePath: '/games/neon-drifter/game.js',
+        modulePath: 'games/neon-drifter/game.js',
         fullscreen: true
     },
     {
@@ -96,7 +96,7 @@ export const games = [
         enabled: true,
         color: 'linear-gradient(135deg, #d500f9, #2979ff)',
         icon: '💎',
-        modulePath: '/games/crystal-duel/game.js',
+        modulePath: 'games/crystal-duel/game.js',
         fullscreen: true
     },
     {
@@ -108,7 +108,7 @@ export const games = [
         enabled: true,
         color: 'linear-gradient(135deg, #69f0ae, #7c4dff)',
         icon: '🏐',
-        modulePath: '/games/light-volley/game.js',
+        modulePath: 'games/light-volley/game.js',
         fullscreen: true
     },
     {
@@ -120,7 +120,7 @@ export const games = [
         enabled: true,
         color: 'linear-gradient(135deg, #00e5ff, #d500f9)',
         icon: '🟦',
-        modulePath: '/games/light-cycles/game.js',
+        modulePath: 'games/light-cycles/game.js',
         fullscreen: true
     }
 ];
