@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RetroCouch GameHub | Universal Controller System</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+</head>
+<body class="dark-mode">
+    <header class="glass-header">
+        <div class="container header-content">
+            <h1 class="logo">Retro<span>Couch</span></h1>
+            <nav>
+                <a href="#" id="nav-launcher" class="active">Launcher</a>
+                <a href="#" id="nav-settings">Settings</a>
+                <a href="#" id="nav-docs">Documentation</a>
+            </nav>
+        </div>
+    </header>
+
+    <main id="app-container" class="container">
+        <!-- Content will be dynamically injected here -->
+        <section id="launcher-view" class="view">
+            <h2 class="section-title">Choose Your Game</h2>
+            <div class="game-grid" id="game-grid">
+                <!-- Game tiles will be injected here -->
+            </div>
+        </section>
+
+        <section id="settings-view" class="view hidden">
+            <h2 class="section-title">System Settings</h2>
+            <div class="settings-container">
+                <div class="player-setup">
+                    <h3>Player Setup</h3>
+                    <div class="player-cards" id="player-cards">
+                        <!-- Player cards (1-4) -->
+                    </div>
+                </div>
+                <div class="profiles-config">
+                    <h3>Controller Profiles</h3>
+                    <div class="profiles-list" id="profiles-list">
+                        <!-- Profiles will be listed here -->
+                    </div>
+                    <button id="btn-create-profile" class="btn-primary">Create New Profile</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="test-game-view" class="view hidden">
+            <div class="test-game-layout">
+                <div class="game-area-container">
+                    <h2 class="section-title">Input Tester</h2>
+                    <canvas id="test-game-canvas"></canvas>
+                </div>
+                <div class="debug-panel">
+                    <h3>Real-time Debug</h3>
+                    <div id="debug-output"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="docs-view" class="view hidden">
+            <h2 class="section-title">Developer Documentation</h2>
+            <div class="docs-content glass-card">
+                <!-- Documentation content -->
+            </div>
+        </section>
+    </main>
+
+    <div id="modal-container" class="modal hidden">
+        <div class="modal-content glass-card" id="modal-content">
+            <!-- Modal content injected here -->
+        </div>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
