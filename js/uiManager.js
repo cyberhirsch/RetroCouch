@@ -12,6 +12,17 @@ export class UIManager {
 
     setupEventListeners() {
         document.getElementById('btn-create-profile').addEventListener('click', () => this.showProfileEditor());
+
+        // Global Escape listener for exiting games
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (this.currentGame) {
+                    this.exitGame();
+                } else if (!document.getElementById('modal-container').classList.contains('hidden')) {
+                    document.getElementById('modal-container').classList.add('hidden');
+                }
+            }
+        });
     }
 
     renderInitial() {
@@ -51,20 +62,46 @@ export class UIManager {
     }
 
     async launchGame(gameMetadata) {
+        const gameView = document.getElementById('test-game-view');
+
         // Navigate UI
         document.getElementById('nav-launcher').classList.remove('active');
         document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
-        document.getElementById('test-game-view').classList.remove('hidden');
+        gameView.classList.remove('hidden');
+        document.getElementById('game-view-title').innerText = gameMetadata.title;
+
+        // Fullscreen Handling
+        if (gameMetadata.fullscreen) {
+            gameView.classList.add('fullscreen-mode');
+        } else {
+            gameView.classList.remove('fullscreen-mode');
+        }
 
         try {
             const module = await import(gameMetadata.modulePath);
             if (module.initGame) {
                 this.currentGame = module.initGame(this.canvas, this.cs);
                 this.currentGame.start();
-                window.addEventListener('resize', () => this.currentGame.resize());
+                this.resizeListener = () => this.currentGame.resize();
+                window.addEventListener('resize', this.resizeListener);
             }
         } catch (err) {
             console.error('Failed to load game module:', err);
+        }
+    }
+
+    exitGame() {
+        this.stopTestGame();
+
+        // Return to launcher
+        document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+        document.getElementById('launcher-view').classList.remove('hidden');
+        document.getElementById('nav-launcher').classList.add('active');
+        document.getElementById('test-game-view').classList.remove('fullscreen-mode');
+
+        if (this.resizeListener) {
+            window.removeEventListener('resize', this.resizeListener);
+            this.resizeListener = null;
         }
     }
 

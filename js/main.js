@@ -25,7 +25,7 @@ class App {
 
         // Let the UI manager take over the initial rendering
         this.uiManager.renderInitial();
-        
+
         // Start the main app loop for input processing and UI updates
         this.loop();
     }
@@ -45,6 +45,7 @@ class App {
             this.uiManager.initTestGame();
         } else {
             this.uiManager.stopTestGame();
+            document.getElementById('test-game-view').classList.remove('fullscreen-mode');
         }
     }
 

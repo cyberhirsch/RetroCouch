@@ -552,3 +552,41 @@ nav a.active::after {
     border-radius: 12px;
     cursor: pointer;
 }
+
+/* Fullscreen Game View */
+.view.fullscreen-mode {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    padding: 0;
+    z-index: 2000;
+    background: #000;
+    overflow: hidden;
+}
+
+.view.fullscreen-mode .test-game-layout {
+    grid-template-columns: 1fr;
+    height: 100%;
+    width: 100%;
+    gap: 0;
+}
+
+.view.fullscreen-mode .game-area-container {
+    height: 100%;
+    width: 100%;
+    border: none;
+    border-radius: 0;
+}
+
+.view.fullscreen-mode .debug-panel,
+.view.fullscreen-mode #game-view-title {
+    display: none;
+    /* Hide UI elements in fullscreen */
+}
+
+.view.fullscreen-mode canvas {
+    width: 100vw !important;
+    height: 100vh !important;
+}
